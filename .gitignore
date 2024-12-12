@@ -1,0 +1,23 @@
+# Исключить виртуальные окружения Python
+env/
+venv/
+
+# Исключить файлы конфигурации IDE
+.idea/
+.vscode/
+myvenv/
+# Исключить кэш Python
+__pycache__/
+*.py[cod]
+instance
+migrations
+train
+*.model
+*.swp
+.DS_Store
+inspection.py
+# Исключить лог-файлы
+*.log
+test
+# Исключить базы данных SQLite
+*.sqlite3
