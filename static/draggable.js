@@ -148,9 +148,25 @@ export class Draggable {
     }
 
     delete() {
-        this.unselect();
-        this.svgComponent.remove();
-        this.hoverText.remove();
+        const elementId = this.uid; // Убедитесь, что у каждого элемента есть уникальный ID
+    
+        fetch('/clear-db-row', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: elementId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                console.error("Error deleting record:", data.error);
+            } else {
+                console.log("Record deleted successfully:", data.message);
+                this.unselect();
+                this.svgComponent.remove();
+                this.hoverText.remove();
+            }
+        })
+        .catch(error => console.error("Error:", error));
     }
 
     center() {

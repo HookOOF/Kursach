@@ -25,7 +25,6 @@ class WindowProperties {
     svgYOffset = 0;
     shapeTextBox = null;
 
-    // Приватный конструктор
     constructor() {
         if (WindowProperties.instance) {
             return WindowProperties.instance;
@@ -33,8 +32,6 @@ class WindowProperties {
         WindowProperties.instance = this;
 
     }
-
-    // Метод для получения экземпляра
     static getInstance() {
         if (!WindowProperties.instance) {
             WindowProperties.instance = new WindowProperties();
@@ -42,6 +39,4 @@ class WindowProperties {
         return WindowProperties.instance;
     }
 }
-
-// Экспорт Singleton
 export const windowProperties = WindowProperties.getInstance();

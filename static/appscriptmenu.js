@@ -15,6 +15,7 @@ import { Input } from './input.js';
 import { Output } from './output.js';
 import { ActivationLayer } from "./activationlayer.js";
 import { Activation, Relu, Sigmoid, Tanh } from "./activation.js";
+import { Point } from './shape.js';
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 
 console.log("JS is connected");
@@ -54,7 +55,12 @@ export function setModelHyperparameters() {
         }
     });
 }
-
+function deleteSelected() {
+    if (windowProperties.selectedElement) {
+        windowProperties.selectedElement.delete();
+        windowProperties.selectedElement = null;
+    }
+}
 
 
 function resizeMiddleSVG() {
@@ -198,6 +204,33 @@ const initDOM = () => {
             windowProperties.selectedElement = null;
         }
     });
+
+
+    window.onkeyup = (event) => {
+        switch (event.key) {
+            case "Escape":
+                if (windowProperties.selectedElement) {
+                    windowProperties.selectedElement.unselect();
+                    windowProperties.selectedElement = null;
+                }
+                break;
+            case "Delete":
+                if (document.getElementsByClassName("focusParam").length === 0) {
+                    deleteSelected();
+                }
+                break;
+            case "Backspace":
+                if (document.getElementsByClassName("focusParam").length === 0) {
+                    deleteSelected();
+                }
+                break;
+            case "Enter":
+                break;
+        }
+    };
+
+
+
     setupOptionOnClicks();
     resizeMiddleSVG();
     loadDraggables();
@@ -232,11 +265,14 @@ function appendItem(itemType,x,y) {
     if (x && y){
         const item = new itemConstructors[itemType]({x,y});
         svgData.draggable.push(item);
+        return item;
     }
     else{
         const item = new itemConstructors[itemType]();
         svgData.draggable.push(item);
+        return item;
     }
+    ;
 }
 
 
@@ -251,21 +287,71 @@ export function saveDraggable(object) {
         }).then(response => response.json())
         .then(data => console.log(data))
         .catch(error => console.error('Error:', error));
-    }   
+    }
+    else if (object instanceof Activation) {
+        const serializableObject = {
+            id : object.uid,
+            layer_name: object.activationType,
+            xPosition: object.draggedX,
+            yPosition: object.draggedY,
+            parent_ids : [],
+            children_ids : []
+
+        };
+        console.log("Serialized object:", serializableObject);
+        fetch('/update-draggable', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(serializableObject),
+        }).then(response => response.json())
+        .then(data => console.log(data))
+        .catch(error => console.error('Error:', error));
+    }
 }
 
 async function loadDraggables() {
     try {
         const response = await fetch('/get-draggables');
         if (response.ok) {
+            let relations = {}
             const data = await response.json();
             data.draggables.forEach((draggable) => {
-                const { eid, position_x, position_y, layer_name, properties } = draggable;
+                const { eid, position_x, position_y, layer_name, properties,children_ids,parent_ids} = draggable;
 
-                // Создаем объект через appendItem
-                const item = appendItem(layer_name,position_x,position_y); // Создаем объект по имени
-                //item.setPosition({ x: position_x, y: position_y }); // Устанавливаем координаты
-                //item.properties = properties; // Устанавливаем свойства объекта
+                if (layer_name=='Output'){
+                    svgData.output.setPosition(new Point(position_x, position_y));
+                    relations[eid] = {
+                        object: svgData.output,
+                        parents: [],
+                        children: []
+                    }; 
+                }
+                else 
+                if (layer_name=='Input'){
+                    svgData.input.setPosition(new Point(position_x, position_y));
+                    relations[eid] = {
+                        object: svgData.input,
+                        parents: [parent_ids],
+                        children: [children_ids]
+                    };    
+                }
+                else{
+                    var item = appendItem(layer_name,position_x,position_y);
+                        relations[eid] = {
+                        object: item,
+                        parents: [parent_ids],
+                        children: [children_ids]
+                    };    
+                }
+           
+
+            });
+            Object.values(relations).forEach((relation) => {
+                relation.children.forEach((childId) => {
+                    if (relations[childId]) {
+                        relation.object.addChild(relations[childId].object);
+                    }
+                });
             });
         } else {
             console.error("Failed to load draggables:", await response.json());

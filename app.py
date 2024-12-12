@@ -22,22 +22,23 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)  # Первичный ключ
+    id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(120), nullable=False)
-    draggables = db.relationship('Draggable', backref='user', lazy=True)  # Связь с Draggable
+    draggables = db.relationship('Draggable', backref='user', lazy=True)
 
 
 # Модель для объектов draggable
 class Draggable(db.Model):
-    id = db.Column(db.Integer, primary_key=True)  # Первичный ключ
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  # Внешний ключ
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     eid = db.Column(db.Integer, nullable=False)
     layer_name = db.Column(db.String(80),nullable=False)
-    position_x = db.Column(db.Float, nullable=False)  # Координата X
+    position_x = db.Column(db.Float, nullable=False)
     position_y = db.Column(db.Float, nullable=False)
-    properties = db.Column(db.JSON, nullable=True)  # Дополнительные свойства объекта в формате JSON
-
+    properties = db.Column(db.JSON, nullable=True)
+    parent_ids = db.Column(db.JSON, nullable=True)
+    children_ids = db.Column(db.JSON, nullable=True)
 @app.before_request
 def create_tables():
     db.create_all()
@@ -74,11 +75,13 @@ def logout():
 @app.route('/update-draggable', methods=['POST'])
 def update_draggable():
     data = request.json
-    #object_id = data.get('objectId')
     x = data.get('xPosition')
     y = data.get('yPosition')
     eid = data.get('id')
     layername = data.get('layer_name')
+    parent_ids = data.get('parent_ids')
+    children_ids = data.get('children_ids')
+
     properties = data.get('params')
 
     user_id = session.get('user_id')
@@ -93,6 +96,8 @@ def update_draggable():
         draggable.properties = properties
         draggable.eid = eid
         draggable.layer_name = layername
+        draggable.parent_ids = parent_ids
+        draggable.children_ids = children_ids
         db.session.commit()
         return {"message": "Position updated successfully"}, 200
     else:
@@ -101,7 +106,9 @@ def update_draggable():
             eid=eid,
             position_x=x,
             position_y=y,
-            layer_name = layername)
+            layer_name = layername,
+            parent_ids = parent_ids,
+            children_ids = children_ids)
         db.session.add(new_draggable)
         db.session.commit()
         return {"message": "Draggable created successfully"}, 201
@@ -118,11 +125,30 @@ def get_draggables():
             "position_x": d.position_x,
             "position_y": d.position_y,
             "properties": d.properties,
-            "layer_name": d.layer_name
+            "layer_name": d.layer_name,
+            "children_ids" : d.children_ids,
+            "parent_ids" : d.parent_ids
 
         } for d in draggables
     ]
     return {"draggables": draggable_list}, 200
+
+@app.route('/clear-db-row',methods=['POST'])
+def clear_db_row():
+    data = request.get_json()
+    element_id = data.get('id') 
+    if not element_id:
+            return ({"error": "ID is required"}), 400
+    del_elem = Draggable.query.filter_by(user_id=session.get('user_id'), eid=element_id).first()
+    try:
+        # Удаляем элемент
+        db.session.delete(del_elem)
+        db.session.commit()
+        return ({"message": "Record deleted successfully"}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return ({"error": str(e)}), 500
 @app.cli.command("create-user")
 def create_user():
     db.create_all()
@@ -163,8 +189,9 @@ def show_tables():
     for draggable in draggables:
         print(f"ID: {draggable.id}, User ID: {draggable.user_id}, EID: {draggable.eid}, "
               f"Layer Name: {draggable.layer_name}, X: {draggable.position_x}, Y: {draggable.position_y}, "
-              f"Properties: {draggable.properties}")
-
+              f"Properties: {draggable.properties}"
+              f"Children: {draggable.children_ids}"
+              f"Parents: {draggable.parent_ids}")
 
 
 

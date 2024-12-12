@@ -2,13 +2,15 @@ import { windowProperties } from "./window.js";
 import { ActivationLayer } from "./activationlayer.js";
 import { Draggable } from "./draggable.js";
 import { Point } from "./shape.js";
-
+import { saveDraggable } from './appscriptmenu.js';
+import * as d3 from "https://cdn.jsdelivr.net/npm/d3@6/+esm";
+import { Layer } from "./layer.js";
 export class Activation extends Draggable {
     static defaultLocation = new Point(50, 150);
 
     constructor(color, defaultLocation) {
         super(defaultLocation);
-
+        this.uid = Layer.nextID++;
         this.layer = null;
 
         this.body = this.svgComponent
@@ -89,6 +91,7 @@ export class Relu extends Activation {
     getHoverText() {
         return "relu";
     }
+
 }
 
 export class Sigmoid extends Activation {
