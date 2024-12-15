@@ -1,5 +1,6 @@
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 import { windowProperties } from "./window.js";
+import { saveDraggable } from "./appscriptmenu.js";
 //import { Layer } from "./layer";
 
 export class Wire {
@@ -33,6 +34,8 @@ export class Wire {
 
         this.line.on("click", () => { this.select(); });
         this.triangle.on("click", () => { this.select(); });
+        saveDraggable(source);
+        saveDraggable(dest);
     }
 
     raise() {

@@ -391,4 +391,87 @@ div.option.selected {
   width: calc(100% - 30px);
   padding: 10px 0px 0px 10px;
   margin: 0px 10px 0px 10px;
+}
+
+#auth-container p,
+#auth-container form {
+  margin: 5px 0; /* Отступы между элементами */
+}
+
+label {
+  display: inline-block;
+  width: 250px;
+  padding: 6px 0 6px 0;
+}
+
+.prediction-canvas {
+  width: 100%;
+}
+
+.pred {
+  font-size: 1.2vw;
+  line-height: 1.5vw;
+  width: 100%;
+  font-family: Helvetica;
+  text-align: center;
+}
+
+.pred-correct {
+  background-color: #79BD8F;
+}
+
+.pred-none {
+  background-color: #aaa;
+}
+
+.pred-incorrect {
+  background-color: #FF6138;
+}
+
+.pred-container {
+  display: inline-block;
+  margin: 13%;
+}
+
+#images {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  grid-template-rows: repeat(6, 1fr);
+  width: 100%;
+  height: 100%;
+}
+
+#errorMessage {
+  height: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#error {
+  width: 200px;
+  position: absolute;
+  padding: 20px 5px 5px 5px;
+  bottom: 10px;
+  right: 20px;
+  background-color: #dca7a7;
+  border-style: solid;
+  border-width: 3px;
+  border-color: #555;
+}
+
+#x {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  cursor: pointer;
+}
+
+#paramshell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+#auth-container {
+  margin-top: auto;
 }/*# sourceMappingURL=styles.css.map */

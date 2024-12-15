@@ -36,7 +36,7 @@ export class Conv2D extends ActivationLayer {
 
         const value1 = document.createElement("input");
         value1.className = "paramvalue layerparamvalue";
-        value1.value = this.parameterDefaults.filters;
+        value1.value = "16";
 
         line1.appendChild(name1);
         line1.appendChild(value1);

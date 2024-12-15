@@ -3,6 +3,7 @@
 import { getSvgOriginalBoundingBox } from "./utils.js";
 import { Layer } from "./layer.js";
 import { Point, Rectangle } from "./shape.js";
+import state from "./state.js";
 
 export class Input extends Layer {
     constructor() {

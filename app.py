@@ -39,6 +39,7 @@ class Draggable(db.Model):
     properties = db.Column(db.JSON, nullable=True)
     parent_ids = db.Column(db.JSON, nullable=True)
     children_ids = db.Column(db.JSON, nullable=True)
+    template_id = db.Column(db.Integer,nullable=False)
 @app.before_request
 def create_tables():
     db.create_all()
@@ -46,6 +47,28 @@ def create_tables():
 @app.route("/")
 def index():
         return render_template('index.html')
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+        confirm_password = request.form.get("confirm_password")
+
+        if password != confirm_password:
+            flash("Passwords do not match. Please try again.", "danger")
+            return redirect(url_for("register"))
+
+        if User.query.filter_by(username=username).first():
+            flash("Username already exists. Please choose another one.", "danger")
+            return redirect(url_for("register"))
+
+        new_user = User(username=username, password=password)
+        db.session.add(new_user)
+        db.session.commit()
+        flash("Registration successful! Please log in.", "success")
+        return redirect(url_for("index"))
+
+    return render_template("register.html")
 
 @app.route("/login", methods=["POST"])
 def login():
@@ -81,13 +104,12 @@ def update_draggable():
     layername = data.get('layer_name')
     parent_ids = data.get('parent_ids')
     children_ids = data.get('children_ids')
-
     properties = data.get('params')
-
+    template_id = data.get('template_id')
     user_id = session.get('user_id')
     if not user_id:
         return {"error": "User not authenticated"}, 403
-    draggable = Draggable.query.filter_by(user_id=user_id, eid=eid).first()
+    draggable = Draggable.query.filter_by(user_id=user_id, eid=eid,template_id = template_id).first()
 
     if draggable:
         draggable.user_id = user_id
@@ -98,6 +120,7 @@ def update_draggable():
         draggable.layer_name = layername
         draggable.parent_ids = parent_ids
         draggable.children_ids = children_ids
+        draggable.template_id = template_id
         db.session.commit()
         return {"message": "Position updated successfully"}, 200
     else:
@@ -108,17 +131,19 @@ def update_draggable():
             position_y=y,
             layer_name = layername,
             parent_ids = parent_ids,
-            children_ids = children_ids)
+            children_ids = children_ids,
+            template_id = template_id)
         db.session.add(new_draggable)
         db.session.commit()
         return {"message": "Draggable created successfully"}, 201
 @app.route('/get-draggables', methods=['GET'])
 def get_draggables():
-    user_id = session.get('user_id')  # ID пользователя из сессии
+    user_id = session.get('user_id')
+    template_id = request.args.get('templateID')
     if not user_id:
         return {"error": "User not authenticated"}, 403
 
-    draggables = Draggable.query.filter_by(user_id=user_id).all()
+    draggables = Draggable.query.filter_by(user_id=user_id,template_id = template_id).all()
     draggable_list = [
         {
             "eid": d.eid,
@@ -127,7 +152,8 @@ def get_draggables():
             "properties": d.properties,
             "layer_name": d.layer_name,
             "children_ids" : d.children_ids,
-            "parent_ids" : d.parent_ids
+            "parent_ids" : d.parent_ids,
+            "template_id" : d.template_id
 
         } for d in draggables
     ]
@@ -137,9 +163,10 @@ def get_draggables():
 def clear_db_row():
     data = request.get_json()
     element_id = data.get('id') 
+    template_id = data.get('template_id')
     if not element_id:
             return ({"error": "ID is required"}), 400
-    del_elem = Draggable.query.filter_by(user_id=session.get('user_id'), eid=element_id).first()
+    del_elem = Draggable.query.filter_by(user_id=session.get('user_id'), eid=element_id,template_id = template_id).first()
     try:
         # Удаляем элемент
         db.session.delete(del_elem)
@@ -191,7 +218,9 @@ def show_tables():
               f"Layer Name: {draggable.layer_name}, X: {draggable.position_x}, Y: {draggable.position_y}, "
               f"Properties: {draggable.properties}"
               f"Children: {draggable.children_ids}"
-              f"Parents: {draggable.parent_ids}")
+              f"Parents: {draggable.parent_ids}"
+              f"Template_id: {draggable.template_id}"
+              )
 
 
 

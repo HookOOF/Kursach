@@ -1,12 +1,12 @@
 import { setModelHyperparameters } from "../appscriptmenu.js";
-import { dataset } from "./data";
-import { model } from "./params_object";
+import { mnistdataset as dataset} from "../data.js";
+import { model } from "../params_model.js";
 
 export function pythonSkeleton(modelCode){
     setModelHyperparameters();
     return `from __future__ import print_function
 import keras
-from keras.datasets import ${dataset.pythonName}
+from keras.datasets import mnist
 from keras.models import Model
 from keras.layers import Dense, Dropout, Flatten, Input, Concatenate, BatchNormalization, Add
 from keras.layers import Conv2D, MaxPooling2D, ReLU
@@ -20,7 +20,7 @@ epochs = ${model.params.epochs}
 img_rows, img_cols, channels = ${dataset.IMAGE_HEIGHT}, ${dataset.IMAGE_WIDTH}, ${dataset.IMAGE_CHANNELS}
 
 # the data, split between train and test sets
-(x_train, y_train), (x_test, y_test) = ${dataset.pythonName}.load_data()
+(x_train, y_train), (x_test, y_test) = mnist.load_data()
 
 if K.image_data_format() == 'channels_first':
     x_train = x_train.reshape(x_train.shape[0], channels, img_rows, img_cols)

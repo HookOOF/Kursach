@@ -1,13 +1,14 @@
 //import * as tf from "@tensorflow/tfjs";
 //import { generateTfjsModel, topologicalSort } from "../../model/build_network";
 //import { changeDataset } from "../../model/data";
-import { svgData } from "./appscriptmenu.js";
+import { svgData} from "./appscriptmenu.js";
 import { displayError } from "./error.js";
 import { parseString } from "./utils.js";
 import { windowProperties } from "./window.js";
 import { Draggable } from "./draggable.js";
 import { Point, Shape } from "./shape.js";
 import { Wire } from "./wire.js";
+import state from "./state.js";
 
 export class Layer extends Draggable {
     static nextID = 0; // Глобальный счётчик ID
@@ -24,6 +25,7 @@ export class Layer extends Draggable {
         this.parents = new Set();
         this.wires = new Set();
         this.shape = [];
+        this.template_id = state.currentTemplateID;
 
         this.outputWiresAllowed = true;
         this.wireGuidePresent = true;
@@ -38,7 +40,6 @@ export class Layer extends Draggable {
         this.paramBox.style.visibility = "hidden";
         this.paramBox.style.position = "absolute";
         document.getElementById("paramtruck").appendChild(this.paramBox);
-
         this.svgComponent.on("click", () => {
             this.select();
             window.clearTimeout(this.moveTimeout);
@@ -96,6 +97,7 @@ export class Layer extends Draggable {
         this.paramBox.style.visibility = "hidden";
         this.svgComponent.selectAll("path").style("stroke", null).style("stroke-width", null);
         this.svgComponent.selectAll(".outerShape").style("stroke", null).style("stroke-width", null);
+        windowProperties.wireGuide.hide();
         windowProperties.shapeTextBox.hide();
     }
 
@@ -118,6 +120,10 @@ export class Layer extends Draggable {
         super.delete();
         this.wires.forEach((w) => w.delete());
     }
+    delete_from_template() {
+        super.delete_from_template();
+        this.wires.forEach((w) => w.delete());
+    }
 
     toJson() {
         return {
@@ -128,6 +134,7 @@ export class Layer extends Draggable {
             parent_ids: Array.from(this.parents, (parent) => parent.uid),
             xPosition: this.getPosition().x,
             yPosition: this.getPosition().y,
+            template_id : this.template_id
         };
     }
 

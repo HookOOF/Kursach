@@ -9,7 +9,6 @@ export class Draggable {
         if (new.target === Draggable) {
             throw new Error("Cannot instantiate abstract class Draggable directly");
         }
-
         this.wireGuidePresent = false;
         this.draggedX = null; // Use these to let draggables return to user dragged position after cropping
         this.draggedY = null;
@@ -147,9 +146,16 @@ export class Draggable {
         this.svgComponent.selectAll("rect").style("stroke", null).style("stroke-width", null);
     }
 
-    delete() {
-        const elementId = this.uid; // Убедитесь, что у каждого элемента есть уникальный ID
-    
+    delete_from_db() {
+        const elementId = this.uid;
+        let arrParents = []
+        let arrChildren = []
+        this.parents.forEach((parent) => {
+            arrParents.push(parent);
+          });
+        this.children.forEach((child) => {
+            arrChildren.push(child);
+          });
         fetch('/clear-db-row', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -161,13 +167,23 @@ export class Draggable {
                 console.error("Error deleting record:", data.error);
             } else {
                 console.log("Record deleted successfully:", data.message);
-                this.unselect();
-                this.svgComponent.remove();
-                this.hoverText.remove();
+                arrParents.forEach((parent) => {
+                console.log('kek');
+                saveDraggable(parent);
+            });
+                arrChildren.forEach((child) => {
+                saveDraggable(child);
+              });
             }
         })
         .catch(error => console.error("Error:", error));
     }
+    delete(){
+            this.unselect();
+            this.svgComponent.remove();
+            this.hoverText.remove();
+        }
+
 
     center() {
         const bbox = this.svgComponent.node().getBBox();

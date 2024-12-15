@@ -1,4 +1,4 @@
-import * as tf from "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js";
+//import * as tf from "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js";
 import { displayError } from "./error.js";
 import { ActivationLayer } from "./activationlayer.js";
 import { Line, PathShape, Point } from "./shape.js";
